@@ -6,7 +6,7 @@ from mcp.client.streamable_http import streamablehttp_client
 
 RENDER_MCP_URL = "https://mcp.render.com/mcp"
 API_KEY = os.environ.get("RENDER_API_KEY")
-WORKSPACE_ID = os.environ.get("RENDER_WORKSPACE_ID", "tea-d5n616cmrvns73figjog")
+SERVICE_ID = "srv-d5n9pol6ubrc73anse60"
 
 if not API_KEY:
     print("❌ Falta RENDER_API_KEY")
@@ -20,20 +20,13 @@ async def run_mcp():
             await session.initialize()
             print("✅ Conectado a Render MCP")
 
-            # Seleccionar workspace (list_workspaces auto-selecciona si solo hay uno)
-            ws_result = await session.call_tool("list_workspaces", arguments={})
-            if ws_result.content and "automatically selected" not in ws_result.content[0].text.lower():
-                await session.call_tool("select_workspace", arguments={"workspaceId": WORKSPACE_ID})
+            # Seleccionar workspace
+            await session.call_tool("list_workspaces", arguments={})
 
-            # Crear web service
-            result = await session.call_tool("create_web_service", arguments={
-                "name": "render-devsecops-api",
-                "repo": "https://github.com/TU_USUARIO/render-devsecops-mcp",
-                "branch": "main",
-                "buildCommand": "pip install -r requirements.txt",
-                "startCommand": "gunicorn src.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:10000",
-                "plan": "free",
-                "region": "oregon"
+            # Actualizar el start command del servicio
+            result = await session.call_tool("update_web_service", arguments={
+                "serviceId": SERVICE_ID,
+                "startCommand": "gunicorn app:app -k uvicorn.workers.UvicornWorker -b 0.0.0.0:10000"
             })
             if result.content:
                 print(result.content[0].text)
