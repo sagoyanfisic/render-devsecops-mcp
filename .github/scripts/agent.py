@@ -25,8 +25,16 @@ async def run_mcp():
             if ws_result.content and "automatically selected" not in ws_result.content[0].text.lower():
                 await session.call_tool("select_workspace", arguments={"workspaceId": WORKSPACE_ID})
 
-            # Listar servicios
-            result = await session.call_tool("list_services", arguments={"limit": 10})
+            # Crear web service
+            result = await session.call_tool("create_web_service", arguments={
+                "name": "render-devsecops-api",
+                "repo": "https://github.com/TU_USUARIO/render-devsecops-mcp",
+                "branch": "main",
+                "buildCommand": "pip install -r requirements.txt",
+                "startCommand": "gunicorn src.main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:10000",
+                "plan": "free",
+                "region": "oregon"
+            })
             if result.content:
                 print(result.content[0].text)
 
